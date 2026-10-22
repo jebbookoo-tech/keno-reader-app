@@ -44,4 +44,4 @@ uses: actions/checkout@v4
     uses: actions/upload-artifact@v4
     with:
       name: KenoReader-debug-apk
-      path: project/app/build/outputs/apk/debug/app-debug.ap
+      path: project/app/build/outputs/apk/debug/app-debug.apk
