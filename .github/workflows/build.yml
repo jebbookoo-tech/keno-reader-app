@@ -1,47 +1,61 @@
 name: Build Keno Android APK
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+'on':
+workflow_dispatch:
+push:
+branches:
+- main
+
+permissions:
+contents: read
 
 jobs:
 build:
+name: Build Android APK
 runs-on: ubuntu-latest
-steps:
-- name: Checkout repository
-uses: actions/checkout@v4
 
-  - name: Set up Java
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Set up Java 17
     uses: actions/setup-java@v4
     with:
       distribution: temurin
-      java-version: "17"
-
-  - name: Set up Android SDK
-    uses: android-actions/setup-android@v3
+      java-version: '17'
 
   - name: Install Android SDK packages
-    run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
-  - name: Prepare Gradle
     run: |
-      curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+      yes | sdkmanager --licenses || true
+      sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+  - name: Install Gradle
+    run: |
+      curl -fL https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
       unzip -q /tmp/gradle.zip -d /tmp
       echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
+
+  - name: Check ZIP file
+    run: |
+      test -f KenoScreenReader-starter.zip || {
+        echo "ERROR: KenoScreenReader-starter.zip not found"
+        exit 1
+      }
 
   - name: Extract Android project
     run: |
       mkdir project
       unzip -q KenoScreenReader-starter.zip -d project
+      test -f project/settings.gradle.kts
 
   - name: Build debug APK
     working-directory: project
-    run: gradle assembleDebug
+    run: gradle assembleDebug --stacktrace
 
   - name: Upload APK
+    if: success()
     uses: actions/upload-artifact@v4
     with:
       name: KenoReader-debug-apk
       path: project/app/build/outputs/apk/debug/app-debug.apk
+      if-no-files-found: error
