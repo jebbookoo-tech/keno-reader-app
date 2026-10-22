@@ -31,20 +31,17 @@ uses: actions/checkout@v4
       unzip -q /tmp/gradle.zip -d /tmp
       echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-  - name: Check project files
+  - name: Extract Android project
     run: |
-      echo "Repository files:"
-      ls -la
-      if [ ! -f settings.gradle.kts ]; then
-        echo "Android project files are not uploaded yet."
-        exit 1
-      fi
+      mkdir project
+      unzip -q KenoScreenReader-starter.zip -d project
 
   - name: Build debug APK
+    working-directory: project
     run: gradle assembleDebug
 
   - name: Upload APK
     uses: actions/upload-artifact@v4
     with:
       name: KenoReader-debug-apk
-      path: app/build/outputs/apk/debug/app-debug.apk
+      path: project/app/build/outputs/apk/debug/app-debug.apk
